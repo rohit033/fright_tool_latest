@@ -11,6 +11,7 @@ from flask_mail import Mail, Message
 from dotenv import load_dotenv
 from functools import wraps
 import logging
+import tempfile
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -27,7 +28,7 @@ app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'sqlite:///fre
 if app.config['SQLALCHEMY_DATABASE_URI'].startswith('postgres://'):
     app.config['SQLALCHEMY_DATABASE_URI'] = app.config['SQLALCHEMY_DATABASE_URI'].replace('postgres://', 'postgresql://', 1)
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['UPLOAD_FOLDER'] = os.environ.get('UPLOAD_FOLDER', 'uploads')
+app.config['UPLOAD_FOLDER'] = tempfile.gettempdir()  # Use system temp directory
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
 
 # Email configuration
@@ -614,6 +615,37 @@ def view_request(request_id):
     unread_count = UserMessage.query.filter_by(receiver_id=current_user.id, is_read=False).count()
     
     return render_template('view_request.html', request=request, unread_count=unread_count)
+
+def allowed_file(filename):
+    ALLOWED_EXTENSIONS = {'pdf', 'doc', 'docx', 'xls', 'xlsx', 'jpg', 'jpeg', 'png'}
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+@app.route('/upload', methods=['POST'])
+@login_required
+def upload_file():
+    if 'file' not in request.files:
+        flash('No file part')
+        return redirect(request.url)
+    file = request.files['file']
+    if file.filename == '':
+        flash('No selected file')
+        return redirect(request.url)
+    if file and allowed_file(file.filename):
+        try:
+            # Create a temporary file
+            temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=os.path.splitext(file.filename)[1])
+            file.save(temp_file.name)
+            
+            # Process the file here
+            # ...
+            
+            # Clean up
+            os.unlink(temp_file.name)
+            flash('File uploaded successfully')
+        except Exception as e:
+            logger.error(f"Error uploading file: {str(e)}")
+            flash('Error uploading file')
+    return redirect(url_for('dashboard'))
 
 def init_db():
     try:
