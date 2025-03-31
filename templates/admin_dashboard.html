@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="py-6">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between items-center">
+            <h1 class="text-2xl font-semibold text-gray-900">Admin Dashboard</h1>
+        </div>
+    </div>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
+        <!-- Welcome Section -->
+        <div class="py-4">
+            <div class="bg-white overflow-hidden shadow rounded-lg">
+                <div class="px-4 py-5 sm:p-6">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900">
+                        Welcome, Admin!
+                    </h3>
+                    <div class="mt-2 max-w-xl text-sm text-gray-500">
+                        <p>Manage and export data from all departments</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Export Section -->
+        <div class="py-4">
+            <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+                <div class="px-4 py-5 sm:p-6">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900">
+                        Export Data
+                    </h3>
+                    <div class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        <!-- Sales Data Export -->
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <h4 class="text-sm font-medium text-gray-900">Sales Data</h4>
+                            <p class="mt-1 text-sm text-gray-500">Export all freight requests and their status</p>
+                            <div class="mt-4">
+                                <a href="{{ url_for('export_sales_data') }}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                    Export Sales Data
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- Pricing Data Export -->
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <h4 class="text-sm font-medium text-gray-900">Pricing Data</h4>
+                            <p class="mt-1 text-sm text-gray-500">Export all pricing responses and vessel details</p>
+                            <div class="mt-4">
+                                <a href="{{ url_for('export_pricing_data') }}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                                    Export Pricing Data
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistics Section -->
+        <div class="py-4">
+            <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+                <div class="px-4 py-5 sm:p-6">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900">
+                        Statistics
+                    </h3>
+                    <div class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <h4 class="text-sm font-medium text-gray-900">Total Requests</h4>
+                            <p class="mt-2 text-3xl font-semibold text-gray-900">{{ stats.total_requests }}</p>
+                        </div>
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <h4 class="text-sm font-medium text-gray-900">Pending Requests</h4>
+                            <p class="mt-2 text-3xl font-semibold text-yellow-600">{{ stats.pending_requests }}</p>
+                        </div>
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <h4 class="text-sm font-medium text-gray-900">Completed Requests</h4>
+                            <p class="mt-2 text-3xl font-semibold text-green-600">{{ stats.completed_requests }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="py-4">
+            <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+                <div class="px-4 py-5 sm:p-6">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900">
+                        Recent Activity
+                    </h3>
+                    <div class="mt-4">
+                        <ul class="divide-y divide-gray-200">
+                            {% for request in recent_requests %}
+                            <li class="py-4">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <p class="text-sm font-medium text-gray-900">Request #{{ request.id }}</p>
+                                        <p class="text-sm text-gray-500">{{ request.pol }} → {{ request.pod }}</p>
+                                    </div>
+                                    <div class="flex items-center space-x-4">
+                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                                            {% if request.status == 'pending' %}
+                                                bg-yellow-100 text-yellow-800
+                                            {% else %}
+                                                bg-green-100 text-green-800
+                                            {% endif %}">
+                                            {{ request.status.title() }}
+                                        </span>
+                                        <span class="text-sm text-gray-500">
+                                            {{ request.created_at.strftime('%Y-%m-%d %H:%M') }}
+                                        </span>
+                                    </div>
+                                </div>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

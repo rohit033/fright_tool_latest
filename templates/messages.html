@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-100 py-6">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="bg-white shadow rounded-lg">
+            <!-- Header -->
+            <div class="px-4 py-5 border-b border-gray-200 sm:px-6">
+                <h3 class="text-lg leading-6 font-medium text-gray-900">
+                    Messages
+                </h3>
+            </div>
+
+            <!-- Message Form -->
+            <div class="px-4 py-5 sm:p-6">
+                <form action="{{ url_for('send_message') }}" method="POST" class="space-y-4">
+                    <div>
+                        <label for="receiver_id" class="block text-sm font-medium text-gray-700">Send to</label>
+                        <select id="receiver_id" name="receiver_id" required class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md">
+                            <option value="">Select a user</option>
+                            {% for user in users %}
+                            <option value="{{ user.id }}">{{ user.username }} ({{ user.role }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div>
+                        <label for="content" class="block text-sm font-medium text-gray-700">Message</label>
+                        <textarea id="content" name="content" rows="3" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"></textarea>
+                    </div>
+                    <div>
+                        <button type="submit" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                            Send Message
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Messages List -->
+            <div class="border-t border-gray-200">
+                <div class="px-4 py-5 sm:p-6">
+                    <div class="space-y-6">
+                        <!-- Received Messages -->
+                        <div>
+                            <h4 class="text-lg font-medium text-gray-900 mb-4">Received Messages</h4>
+                            {% if received_messages %}
+                                {% for message in received_messages %}
+                                <div class="bg-gray-50 rounded-lg p-4 mb-4 {% if not message.is_read %}border-l-4 border-blue-500{% endif %}">
+                                    <div class="flex justify-between items-start">
+                                        <div>
+                                            <p class="text-sm font-medium text-gray-900">From: {{ message.sender.username }}</p>
+                                            <p class="text-sm text-gray-500">{{ message.created_at.strftime('%Y-%m-%d %H:%M') }}</p>
+                                        </div>
+                                        {% if not message.is_read %}
+                                        <a href="{{ url_for('mark_message_read', message_id=message.id) }}" class="text-sm text-blue-600 hover:text-blue-500">
+                                            Mark as read
+                                        </a>
+                                        {% endif %}
+                                    </div>
+                                    <p class="mt-2 text-sm text-gray-700">{{ message.content }}</p>
+                                </div>
+                                {% endfor %}
+                            {% else %}
+                                <p class="text-sm text-gray-500">No received messages</p>
+                            {% endif %}
+                        </div>
+
+                        <!-- Sent Messages -->
+                        <div>
+                            <h4 class="text-lg font-medium text-gray-900 mb-4">Sent Messages</h4>
+                            {% if sent_messages %}
+                                {% for message in sent_messages %}
+                                <div class="bg-gray-50 rounded-lg p-4 mb-4">
+                                    <div>
+                                        <p class="text-sm font-medium text-gray-900">To: {{ message.receiver.username }}</p>
+                                        <p class="text-sm text-gray-500">{{ message.created_at.strftime('%Y-%m-%d %H:%M') }}</p>
+                                    </div>
+                                    <p class="mt-2 text-sm text-gray-700">{{ message.content }}</p>
+                                </div>
+                                {% endfor %}
+                            {% else %}
+                                <p class="text-sm text-gray-500">No sent messages</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 
