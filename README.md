@@ -1,6 +1,6 @@
 # Freight Pricing System
 
-A modern web application that helps the pricing department and salespeople work together better by managing ocean freight rates, local charges, and vessel schedules.
+A modern web application for managing freight requests, pricing, and vessel schedules. This system helps sales and pricing teams collaborate efficiently on freight pricing and scheduling.
 
 ## Features
 
@@ -9,6 +9,9 @@ A modern web application that helps the pricing department and salespeople work 
 - Track vessel schedules and availability
 - Manage ocean freight rates and local charges
 - Modern and responsive UI using Tailwind CSS
+- File upload support for local and destination charges
+- Messaging system between sales and pricing teams
+- Admin dashboard with data export capabilities
 
 ## Prerequisites
 
@@ -19,11 +22,11 @@ A modern web application that helps the pricing department and salespeople work 
 
 1. Clone the repository:
 ```bash
-git clone <repository-url>
-cd freight-pricing-system
+git clone https://github.com/YOUR_USERNAME/freight_tool.git
+cd freight_tool
 ```
 
-2. Create a virtual environment (recommended):
+2. Create a virtual environment:
 ```bash
 python -m venv venv
 source venv/bin/activate  # On Windows, use: venv\Scripts\activate
@@ -34,7 +37,15 @@ source venv/bin/activate  # On Windows, use: venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-4. Initialize the database:
+4. Set up environment variables:
+Create a `.env` file in the root directory with the following:
+```
+SECRET_KEY=your-secret-key-here
+MAIL_USERNAME=your-email@gmail.com
+MAIL_PASSWORD=your-email-password
+```
+
+5. Initialize the database:
 ```bash
 python app.py
 ```
@@ -48,9 +59,14 @@ python app.py
 
 2. Open your web browser and navigate to `http://localhost:5000`
 
-3. Create a new account with one of the following roles:
+3. Default admin credentials:
+   - Username: `admin`
+   - Password: `admin123`
+   - Email: `admin@example.com`
+
+4. Create new user accounts with appropriate roles:
    - Sales: Can create and view freight requests
-   - Pricing: Can approve/reject requests and manage rates
+   - Pricing: Can provide pricing and manage rates
    - Admin: Full access to all features
 
 ## User Roles
@@ -59,55 +75,28 @@ python app.py
 - Create new freight requests
 - View their own requests
 - Track request status
+- Send messages to pricing team
 
 ### Pricing Team
 - View pending requests
-- Approve or reject requests
-- Manage rates and charges
+- Provide pricing details
+- Upload local and destination charges
+- Send messages to sales team
 
 ### Admin
 - Full access to all features
-- Manage user accounts
 - View all requests and responses
+- Export sales and pricing data
+- Access admin dashboard
 
-## Database Schema
+## Security Features
 
-### Users
-- Username
-- Email
-- Password (hashed)
-- Role (sales/pricing/admin)
-
-### Freight Requests
-- Port of Loading (POL)
-- Port of Discharge (POD)
-- Container Type
-- Cargo Type
-- Weight
-- Free Days
-- Cargo Readiness Date
-- Remarks
-- Status (pending/approved/rejected)
-- Created At
-- User ID (foreign key)
-
-### Pricing Responses
-- Ocean Freight Rate
-- POL Charges
-- POD Charges
-- Free Days
-- Vessel Name
-- Vessel Number
-- Departure Date
-- Created At
-- Request ID (foreign key)
-
-## Security
-
-- Passwords are hashed using Werkzeug's security functions
+- Password hashing
+- Email verification
+- Account locking after failed attempts
+- Password reset functionality
 - Role-based access control
-- Session management with Flask-Login
-- CSRF protection with Flask-WTF
+- Secure file upload handling
 
 ## Contributing
 
@@ -119,4 +108,8 @@ python app.py
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details. 
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## Support
+
+For support, please open an issue in the GitHub repository or contact the administrator. 
