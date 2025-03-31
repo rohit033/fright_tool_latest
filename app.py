@@ -8,25 +8,35 @@ import csv
 import io
 import secrets
 from flask_mail import Mail, Message
+from dotenv import load_dotenv
+from functools import wraps
+import logging
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+# Load environment variables
+load_dotenv()
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'your-secret-key-here')  # Use environment variable
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///freight.db'
+
+# Configuration
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'your-secret-key-here')
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'sqlite:///freight.db')
+if app.config['SQLALCHEMY_DATABASE_URI'].startswith('postgres://'):
+    app.config['SQLALCHEMY_DATABASE_URI'] = app.config['SQLALCHEMY_DATABASE_URI'].replace('postgres://', 'postgresql://', 1)
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['UPLOAD_FOLDER'] = 'uploads'
+app.config['UPLOAD_FOLDER'] = os.environ.get('UPLOAD_FOLDER', 'uploads')
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
 
-# Email configuration (optional)
-if os.environ.get('MAIL_USERNAME') and os.environ.get('MAIL_PASSWORD'):
-    app.config['MAIL_SERVER'] = 'smtp.gmail.com'
-    app.config['MAIL_PORT'] = 587
-    app.config['MAIL_USE_TLS'] = True
-    app.config['MAIL_USERNAME'] = os.environ.get('MAIL_USERNAME')
-    app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD')
-    mail = Mail(app)
-else:
-    mail = None
-    print("Email configuration not found. Email features will be disabled.")
+# Email configuration
+app.config['MAIL_SERVER'] = os.getenv('MAIL_SERVER', 'smtp.gmail.com')
+app.config['MAIL_PORT'] = int(os.getenv('MAIL_PORT', 587))
+app.config['MAIL_USE_TLS'] = os.getenv('MAIL_USE_TLS', 'True').lower() == 'true'
+app.config['MAIL_USERNAME'] = os.getenv('MAIL_USERNAME')
+app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')
+mail = Mail(app)
 
 # Ensure upload directory exists
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
@@ -606,22 +616,19 @@ def view_request(request_id):
     return render_template('view_request.html', request=request, unread_count=unread_count)
 
 def init_db():
-    with app.app_context():
-        db.create_all()
-        
-        # Create default admin user if it doesn't exist
-        admin_user = User.query.filter_by(username='admin').first()
-        if not admin_user:
-            admin_user = User(
-                username='admin',
-                email='admin@example.com',
-                role='admin'
-            )
-            admin_user.set_password('admin123')  # Change this password in production!
-            db.session.add(admin_user)
-            db.session.commit()
-            print("Default admin user created!")
+    try:
+        with app.app_context():
+            db.create_all()
+            logger.info("Database tables created successfully")
+    except Exception as e:
+        logger.error(f"Error creating database tables: {str(e)}")
+        raise
+
+# Initialize database on startup
+try:
+    init_db()
+except Exception as e:
+    logger.error(f"Failed to initialize database: {str(e)}")
 
 if __name__ == '__main__':
-    init_db()  # Initialize database and create admin user
     app.run(debug=True) 

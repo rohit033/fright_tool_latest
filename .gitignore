@@ -24,13 +24,15 @@ wheels/
 # Virtual Environment
 venv/
 ENV/
-.env
 
 # IDE
 .idea/
 .vscode/
 *.swp
 *.swo
+
+# Environment variables
+.env
 
 # Database
 *.db
@@ -53,3 +55,4 @@ uploads/
 .env.development.local
 .env.test.local
 .env.production.local 
+.vercel
