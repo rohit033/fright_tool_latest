@@ -7,11 +7,11 @@ import os
 import csv
 import io
 import secrets
-from flask_mail import Mail, Message
 from dotenv import load_dotenv
 from functools import wraps
 import logging
 import tempfile
+from flask_migrate import Migrate
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -31,18 +31,11 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['UPLOAD_FOLDER'] = tempfile.gettempdir()  # Use system temp directory
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
 
-# Email configuration
-app.config['MAIL_SERVER'] = os.getenv('MAIL_SERVER', 'smtp.gmail.com')
-app.config['MAIL_PORT'] = int(os.getenv('MAIL_PORT', 587))
-app.config['MAIL_USE_TLS'] = os.getenv('MAIL_USE_TLS', 'True').lower() == 'true'
-app.config['MAIL_USERNAME'] = os.getenv('MAIL_USERNAME')
-app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')
-mail = Mail(app)
-
 # Ensure upload directory exists
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
 db = SQLAlchemy(app)
+migrate = Migrate(app, db)
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
@@ -54,10 +47,6 @@ class User(UserMixin, db.Model):
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(128))
     role = db.Column(db.String(20), nullable=False)
-    email_verified = db.Column(db.Boolean, default=False)
-    verification_token = db.Column(db.String(100), unique=True)
-    reset_token = db.Column(db.String(100), unique=True)
-    reset_token_expiry = db.Column(db.DateTime)
     last_login = db.Column(db.DateTime)
     failed_login_attempts = db.Column(db.Integer, default=0)
     account_locked = db.Column(db.Boolean, default=False)
@@ -68,11 +57,6 @@ class User(UserMixin, db.Model):
 
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
-
-    def generate_verification_token(self):
-        self.verification_token = secrets.token_urlsafe(32)
-        db.session.commit()
-        return self.verification_token
 
     def generate_reset_token(self):
         self.reset_token = secrets.token_urlsafe(32)
@@ -149,15 +133,6 @@ def login():
             return redirect(url_for('forgot_password'))
         
         if user and user.check_password(password):
-            # Bypass email verification in development mode
-            if app.debug or not app.config.get('MAIL_USERNAME'):
-                user.email_verified = True
-                db.session.commit()
-            
-            if not user.email_verified:
-                flash('Please verify your email before logging in.')
-                return redirect(url_for('login'))
-            
             login_user(user)
             user.last_login = datetime.utcnow()
             user.failed_login_attempts = 0
@@ -200,25 +175,12 @@ def signup():
         
         user = User(username=username, email=email, role=role)
         user.set_password(password)
-        token = user.generate_verification_token()
-        
-        try:
-            # Send verification email
-            verification_url = url_for('verify_email', token=token, _external=True)
-            msg = Message('Verify Your Email',
-                        sender=app.config['MAIL_USERNAME'],
-                        recipients=[email])
-            msg.body = f'Please verify your email by visiting: {verification_url}'
-            mail.send(msg)
-        except Exception as e:
-            # If email sending fails, still create the user but mark as verified
-            user.email_verified = True
-            flash('Account created but email verification failed. You can still login.')
-        
         db.session.add(user)
         db.session.commit()
-        flash('Please check your email to verify your account.')
+        
+        flash('Account created successfully. Please login.')
         return redirect(url_for('login'))
+    
     return render_template('signup.html')
 
 @app.route('/dashboard')
@@ -372,13 +334,6 @@ def provide_pricing(request_id):
         db.session.add(pricing_response)
         freight_request.status = 'completed'
         db.session.commit()
-        
-        # Send notification email to sales user
-        msg = Message('Pricing Response Submitted',
-                    sender=app.config['MAIL_USERNAME'],
-                    recipients=[freight_request.user.email])
-        msg.body = f'Pricing has been submitted for your request #{request_id}.'
-        mail.send(msg)
         
         flash('Pricing response submitted successfully')
         return redirect(url_for('dashboard'))
@@ -547,34 +502,19 @@ def mark_message_read(message_id):
     
     return redirect(url_for('messages'))
 
-@app.route('/verify_email/<token>')
-def verify_email(token):
-    user = User.query.filter_by(verification_token=token).first()
-    if user:
-        user.email_verified = True
-        user.verification_token = None
-        db.session.commit()
-        flash('Email verified successfully. Please login.')
-        return redirect(url_for('login'))
-    flash('Invalid or expired verification token.')
-    return redirect(url_for('home'))
-
 @app.route('/forgot_password', methods=['GET', 'POST'])
 def forgot_password():
     if request.method == 'POST':
         email = request.form.get('email')
         user = User.query.filter_by(email=email).first()
+        
         if user:
-            token = user.generate_reset_token()
-            reset_url = url_for('reset_password', token=token, _external=True)
-            msg = Message('Password Reset Request',
-                        sender=app.config['MAIL_USERNAME'],
-                        recipients=[user.email])
-            msg.body = f'To reset your password, visit the following link: {reset_url}'
-            mail.send(msg)
+            user.generate_reset_token()
             flash('Password reset instructions have been sent to your email.')
         else:
             flash('Email address not found.')
+        return redirect(url_for('login'))
+    
     return render_template('forgot_password.html')
 
 @app.route('/reset_password/<token>', methods=['GET', 'POST'])
@@ -646,6 +586,51 @@ def upload_file():
             logger.error(f"Error uploading file: {str(e)}")
             flash('Error uploading file')
     return redirect(url_for('dashboard'))
+
+def test_email_configuration():
+    """
+    Test the email configuration and return detailed status information.
+    Returns a tuple of (success: bool, message: str, error_details: str)
+    """
+    try:
+        # Log the configuration (without sensitive data)
+        logger.info(f"Testing email configuration for {app.config['MAIL_USERNAME']}")
+        logger.info(f"SMTP Server: {app.config['MAIL_SERVER']}:{app.config['MAIL_PORT']}")
+        logger.info(f"TLS Enabled: {app.config['MAIL_USE_TLS']}")
+
+        # Create a test message
+        msg = Message('Email Configuration Test',
+                    sender=app.config['MAIL_USERNAME'],
+                    recipients=[app.config['MAIL_USERNAME']])
+        msg.body = 'This is a test email to verify the email configuration.'
+        
+        # Try to send the email
+        mail.send(msg)
+        
+        logger.info("Email sent successfully!")
+        return True, "Email sent successfully!", ""
+
+    except Exception as e:
+        error_msg = str(e)
+        logger.error(f"Failed to send email: {error_msg}")
+        
+        # Provide more specific error messages
+        if "Username and Password not accepted" in error_msg:
+            return False, "Authentication failed", "Please check your Gmail App Password and 2-Step Verification settings"
+        elif "STARTTLS" in error_msg:
+            return False, "TLS Error", "Failed to establish secure connection"
+        elif "Connection refused" in error_msg:
+            return False, "Connection Error", "Could not connect to SMTP server"
+        else:
+            return False, "Email Error", error_msg
+
+@app.route('/test_email')
+def test_email():
+    success, message, details = test_email_configuration()
+    if success:
+        return f'Success: {message}'
+    else:
+        return f'Error: {message}\nDetails: {details}'
 
 def init_db():
     try:
