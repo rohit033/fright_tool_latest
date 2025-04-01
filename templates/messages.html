@@ -13,7 +13,7 @@
 
             <!-- Message Form -->
             <div class="px-4 py-5 sm:p-6">
-                <form action="{{ url_for('send_message') }}" method="POST" class="space-y-4">
+                <form action="{{ url_for('main.send_message') }}" method="POST" class="space-y-4">
                     <div>
                         <label for="receiver_id" class="block text-sm font-medium text-gray-700">Send to</label>
                         <select id="receiver_id" name="receiver_id" required class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md">
@@ -51,7 +51,7 @@
                                             <p class="text-sm text-gray-500">{{ message.created_at.strftime('%Y-%m-%d %H:%M') }}</p>
                                         </div>
                                         {% if not message.is_read %}
-                                        <a href="{{ url_for('mark_message_read', message_id=message.id) }}" class="text-sm text-blue-600 hover:text-blue-500">
+                                        <a href="{{ url_for('main.mark_message_read', message_id=message.id) }}" class="text-sm text-blue-600 hover:text-blue-500">
                                             Mark as read
                                         </a>
                                         {% endif %}

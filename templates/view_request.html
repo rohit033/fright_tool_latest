@@ -12,7 +12,7 @@
                     </div>
                 </div>
                 <div class="flex items-center space-x-4">
-                    <a href="{{ url_for('messages') }}" class="relative inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
+                    <a href="{{ url_for('main.messages') }}" class="relative inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
                         Messages
                         {% if unread_count > 0 %}
                         <span class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
@@ -30,7 +30,7 @@
         <div class="px-4 py-5 sm:px-0">
             <div class="flex justify-between items-center mb-6">
                 <h2 class="text-2xl font-bold text-gray-900">Request Details #{{ request.id }}</h2>
-                <a href="{{ url_for('dashboard') }}" class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                <a href="{{ url_for('main.dashboard') }}" class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
                     Back to Dashboard
                 </a>
             </div>
@@ -119,10 +119,10 @@
                             <dt class="text-sm font-medium text-gray-500">Charges Documents</dt>
                             <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
                                 <div class="flex space-x-4">
-                                    <a href="{{ url_for('download_file', filename=request.response.local_charges_file) }}" class="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-xs font-medium rounded text-gray-700 bg-white hover:bg-gray-50">
+                                    <a href="{{ url_for('main.download_file', filename=request.response.local_charges_file) }}" class="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-xs font-medium rounded text-gray-700 bg-white hover:bg-gray-50">
                                         Download Local Charges
                                     </a>
-                                    <a href="{{ url_for('download_file', filename=request.response.destination_charges_file) }}" class="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-xs font-medium rounded text-gray-700 bg-white hover:bg-gray-50">
+                                    <a href="{{ url_for('main.download_file', filename=request.response.destination_charges_file) }}" class="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-xs font-medium rounded text-gray-700 bg-white hover:bg-gray-50">
                                         Download Destination Charges
                                     </a>
                                 </div>

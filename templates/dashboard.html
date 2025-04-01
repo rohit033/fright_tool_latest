@@ -12,7 +12,7 @@
                     </div>
                 </div>
                 <div class="flex items-center space-x-4">
-                    <a href="{{ url_for('messages') }}" class="relative inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
+                    <a href="{{ url_for('main.messages') }}" class="relative inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
                         Messages
                         {% if unread_count > 0 %}
                         <span class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
@@ -32,7 +32,7 @@
             <div class="flex justify-between items-center">
                 <h2 class="text-2xl font-bold text-gray-900">Welcome, {{ current_user.username }}!</h2>
                 {% if current_user.role == 'sales' %}
-                <a href="{{ url_for('new_request') }}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
+                <a href="{{ url_for('main.new_request') }}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
                     New Freight Request
                 </a>
                 {% endif %}
@@ -157,9 +157,9 @@
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ request.cargo_readiness.strftime('%Y-%m-%d') }}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                             {% if current_user.role == 'pricing' and request.status == 'pending' %}
-                            <a href="{{ url_for('provide_pricing', request_id=request.id) }}" class="text-blue-600 hover:text-blue-900">Provide Pricing</a>
+                            <a href="{{ url_for('main.provide_pricing', request_id=request.id) }}" class="text-blue-600 hover:text-blue-900">Provide Pricing</a>
                             {% else %}
-                            <a href="{{ url_for('view_request', request_id=request.id) }}" class="text-blue-600 hover:text-blue-900">View Details</a>
+                            <a href="{{ url_for('main.view_request', request_id=request.id) }}" class="text-blue-600 hover:text-blue-900">View Details</a>
                             {% endif %}
                         </td>
                     </tr>
