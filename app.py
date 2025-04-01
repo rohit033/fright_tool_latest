@@ -35,9 +35,9 @@ def create_app(config_name='default'):
     migrate = Migrate(app, db)
     login_manager = LoginManager()
     login_manager.init_app(app)
-    login_manager.login_view = 'login'
+    login_manager.login_view = 'main.login'
     
-    # Register blueprints and routes here
+    # Register blueprints
     from . import routes
     app.register_blueprint(routes.bp)
     
