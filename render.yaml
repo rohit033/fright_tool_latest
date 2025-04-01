@@ -3,24 +3,28 @@ services:
     name: fright-tool
     env: python
     buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn app:app
+    startCommand: gunicorn wsgi:app
     envVars:
       - key: PYTHON_VERSION
-        value: 3.10.0
+        value: 3.11.0
       - key: FLASK_ENV
         value: production
       - key: SECRET_KEY
         generateValue: true
       - key: DATABASE_URL
         fromDatabase:
-          name: fright_db
+          name: fright_tool_db
           property: connectionString
       - key: UPLOAD_FOLDER
         value: /tmp/uploads
-      - key: MAX_CONTENT_LENGTH
-        value: 16777216
+      - key: SESSION_COOKIE_SECURE
+        value: true
+      - key: REMEMBER_COOKIE_SECURE
+        value: true
+      - key: REMEMBER_COOKIE_HTTPONLY
+        value: true
 
 databases:
-  - name: fright_db
-    databaseName: fright_db
-    user: fright_user 
+  - name: fright_tool_db
+    databaseName: fright_tool
+    user: fright_tool 
